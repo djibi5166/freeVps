@@ -1,7 +1,7 @@
 name: Ubuntu SSH Server
 
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
   ssh-server:
