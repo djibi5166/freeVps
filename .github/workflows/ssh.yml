@@ -2,6 +2,7 @@ name: Ubuntu SSH Server
 
 on:
   push:
+  workflow_dispatch:
 
 jobs:
   ssh-server:
@@ -17,6 +18,7 @@ jobs:
         run: |
           sudo apt install -y \
             openssh-server \
+            openssh-client \
             curl \
             wget \
             git \
@@ -48,23 +50,17 @@ jobs:
           sudo service ssh start
           sudo service ssh status
 
-      - name: Install Cloudflare Tunnel
+      - name: Start localhost.run tunnel
         run: |
-          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
-          sudo dpkg -i cloudflared.deb
-
-      - name: Start Tunnel
-        run: |
-          tmux new-session -d \
-          'cloudflared tunnel --url ssh://localhost:22 > tunnel.log 2>&1'
-
-          sleep 15
-
-          cat tunnel.log
+          ssh -o StrictHostKeyChecking=no \
+              -o ServerAliveInterval=60 \
+              -R 0:localhost:22 \
+              nokey@localhost.run | tee tunnel.log
 
       - name: Keep Alive
         run: |
           echo "SSH SERVER RUNNING..."
+
           while true; do
             echo "still alive $(date)"
             sleep 300
