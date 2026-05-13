@@ -1,0 +1,71 @@
+name: Ubuntu SSH Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ssh-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Update system
+        run: |
+          sudo apt update
+
+      - name: Install packages
+        run: |
+          sudo apt install -y \
+            openssh-server \
+            curl \
+            wget \
+            git \
+            vim \
+            tmux \
+            htop \
+            net-tools \
+            sudo
+
+      - name: Create user
+        run: |
+          sudo useradd -m -s /bin/bash ck || true
+          echo "ck:ck123456" | sudo chpasswd
+          sudo usermod -aG sudo ck
+          echo "ck ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+
+      - name: Configure SSH
+        run: |
+          sudo mkdir -p /var/run/sshd
+
+          sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+          echo "PermitRootLogin yes" | sudo tee -a /etc/ssh/sshd_config
+          echo "PasswordAuthentication yes" | sudo tee -a /etc/ssh/sshd_config
+
+      - name: Start SSH
+        run: |
+          sudo service ssh start
+          sudo service ssh status
+
+      - name: Install Cloudflare Tunnel
+        run: |
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
+          sudo dpkg -i cloudflared.deb
+
+      - name: Start Tunnel
+        run: |
+          tmux new-session -d \
+          'cloudflared tunnel --url ssh://localhost:22 > tunnel.log 2>&1'
+
+          sleep 15
+
+          cat tunnel.log
+
+      - name: Keep Alive
+        run: |
+          echo "SSH SERVER RUNNING..."
+          while true; do
+            echo "still alive $(date)"
+            sleep 300
+          done
