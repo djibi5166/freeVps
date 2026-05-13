@@ -1,8 +1,8 @@
 name: Ubuntu SSH Server
 
 on:
-  push:
   workflow_dispatch:
+  push:
 
 jobs:
   ssh-server:
@@ -11,57 +11,18 @@ jobs:
 
     steps:
       - name: Update system
-        run: |
-          sudo apt update
+        run: sudo apt update
 
       - name: Install packages
         run: |
           sudo apt install -y \
-            openssh-server \
-            openssh-client \
             curl \
             wget \
             git \
             vim \
             tmux \
             htop \
-            net-tools \
-            sudo
+            net-tools
 
-      - name: Create user
-        run: |
-          sudo useradd -m -s /bin/bash ck || true
-          echo "ck:ck123456" | sudo chpasswd
-          sudo usermod -aG sudo ck
-          echo "ck ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
-
-      - name: Configure SSH
-        run: |
-          sudo mkdir -p /var/run/sshd
-
-          sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-
-          echo "PermitRootLogin yes" | sudo tee -a /etc/ssh/sshd_config
-          echo "PasswordAuthentication yes" | sudo tee -a /etc/ssh/sshd_config
-
-      - name: Start SSH
-        run: |
-          sudo service ssh start
-          sudo service ssh status
-
-      - name: Start localhost.run tunnel
-        run: |
-          ssh -o StrictHostKeyChecking=no \
-              -o ServerAliveInterval=60 \
-              -R 0:localhost:22 \
-              nokey@localhost.run | tee tunnel.log
-
-      - name: Keep Alive
-        run: |
-          echo "SSH SERVER RUNNING..."
-
-          while true; do
-            echo "still alive $(date)"
-            sleep 300
-          done
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
