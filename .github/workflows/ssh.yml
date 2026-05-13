@@ -2,7 +2,6 @@ name: Ubuntu SSH Server
 
 on:
   workflow_dispatch:
-  push:
 
 jobs:
   ssh-server:
@@ -10,19 +9,7 @@ jobs:
     timeout-minutes: 360
 
     steps:
-      - name: Update system
-        run: sudo apt update
-
-      - name: Install packages
-        run: |
-          sudo apt install -y \
-            curl \
-            wget \
-            git \
-            vim \
-            tmux \
-            htop \
-            net-tools
-
-      - name: Setup tmate session
+      - name: Setup tmate
         uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
