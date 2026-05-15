@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <meta name="theme-color" content="#111827" />
+  <title>Advanced PWA Todo App</title>
+
+  <link
+    rel="manifest"
+    href="data:application/json,{
+      &quot;name&quot;:&quot;Advanced Todo PWA&quot;,
+      &quot;short_name&quot;:&quot;TodoPWA&quot;,
+      &quot;start_url&quot;:&quot;.&quot;,
+      &quot;display&quot;:&quot;standalone&quot;,
+      &quot;background_color&quot;:&quot;#111827&quot;,
+      &quot;theme_color&quot;:&quot;#111827&quot;,
+      &quot;icons&quot;:[]
+    }"
+  />
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .glass {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .auth-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 35px;
+    }
+
+    .logo {
+      font-size: 34px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #38bdf8, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      text-align: center;
+      opacity: 0.7;
+      margin-bottom: 30px;
+    }
+
+    .input-group {
+      margin-bottom: 18px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .input-group input,
+    .input-group textarea,
+    .input-group select {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      outline: none;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 15px;
+    }
+
+    .input-group input::placeholder,
+    textarea::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      transition: 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      opacity: 0.95;
+    }
+
+    .switch-auth {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 14px;
+    }
+
+    .switch-auth span {
+      color: #60a5fa;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .dashboard {
+      padding-top: 20px;
+      padding-bottom: 50px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .profile-box {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255,255,255,0.2);
+      background: #1e293b;
+    }
+
+    .profile-info h2 {
+      font-size: 20px;
+    }
+
+    .profile-info p {
+      opacity: 0.7;
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .small-btn {
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .logout-btn {
+      background: #ef4444;
+    }
+
+    .upload-btn {
+      background: #0ea5e9;
+    }
+
+    .todo-panel {
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+
+    .todo-form {
+      display: grid;
+      grid-template-columns: 1fr 160px 160px 120px;
+      gap: 15px;
+    }
+
+    .todo-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .todo-card {
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .todo-card.completed {
+      opacity: 0.7;
+    }
+
+    .todo-card.completed h3 {
+      text-decoration: line-through;
+    }
+
+    .priority {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .high {
+      background: #ef4444;
+    }
+
+    .medium {
+      background: #f59e0b;
+    }
+
+    .low {
+      background: #10b981;
+    }
+
+    .todo-card h3 {
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+
+    .todo-card p {
+      opacity: 0.8;
+      margin-bottom: 14px;
+    }
+
+    .todo-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .todo-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .todo-buttons button {
+      border: none;
+      cursor: pointer;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .complete-btn {
+      background: #10b981;
+    }
+
+    .delete-btn {
+      background: #ef4444;
+    }
+
+    .edit-btn {
+      background: #3b82f6;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      padding: 22px;
+    }
+
+    .stat-card h3 {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-bottom: 10px;
+    }
+
+    .stat-card p {
+      font-size: 32px;
+      font-weight: 800;
+    }
+
+    .empty {
+      text-align: center;
+      opacity: 0.6;
+      padding: 30px;
+    }
+
+    @media(max-width: 900px) {
+      .todo-form {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AUTH -->
+  <div class="auth-wrapper" id="authWrapper">
+    <div class="auth-card glass">
+
+      <div class="logo">Todo PWA</div>
+      <div class="subtitle">Advanced IndexedDB Todo App</div>
+
+      <div class="input-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="Enter email" />
+      </div>
+
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter password" />
+      </div>
+
+      <div class="input-group hidden" id="nameGroup">
+        <label>Full Name</label>
+        <input type="text" id="fullName" placeholder="Your name" />
+      </div>
+
+      <button class="btn btn-primary" id="authBtn">
+        Login
+      </button>
+
+      <div class="switch-auth">
+        <span id="toggleAuth">Create account</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="container dashboard hidden" id="dashboard">
+
+    <div class="topbar">
+
+      <div class="profile-box">
+        <img
+          src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+          class="avatar"
+          id="avatar"
+        />
+
+        <div class="profile-info">
+          <h2 id="profileName">User</h2>
+          <p id="profileEmail">email</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="small-btn upload-btn" id="uploadImageBtn">
+          Upload Profile
+        </button>
+
+        <input
+          type="file"
+          id="profileInput"
+          accept="image/*"
+          class="hidden"
+        />
+
+        <button class="small-btn logout-btn" id="logoutBtn">
+          Logout
+        </button>
+      </div>
+
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+
+      <div class="stat-card glass">
+        <h3>Total Tasks</h3>
+        <p id="totalTasks">0</p>
+      </div>
+
+      <div class="stat-card glass">
+        <h3>Completed</h3>
+        <p id="completedTasks">0</p>
+      </div>
+
+      <div class="stat-card glass">
+        <h3>Pending</h3>
+        <p id="pendingTasks">0</p>
+      </div>
+
+    </div>
+
+    <!-- TODO FORM -->
+    <div class="todo-panel glass">
+      <div class="todo-form">
+
+        <input
+          type="text"
+          id="todoTitle"
+          placeholder="Task title"
+        />
+
+        <input
+          type="date"
+          id="todoDate"
+        />
+
+        <select id="todoPriority">
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+
+        <button class="btn btn-primary" id="addTodoBtn">
+          Add Task
+        </button>
+
+      </div>
+
+      <div class="input-group" style="margin-top:16px;">
+        <textarea
+          id="todoDescription"
+          rows="4"
+          placeholder="Task description"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- TODOS -->
+    <div class="todo-list" id="todoList"></div>
+
+  </div>
+
+  <script>
+    // ==========================
+    // IndexedDB Setup
+    // ==========================
+    let db;
+
+    const request = indexedDB.open("AdvancedTodoDB", 1);
+
+    request.onupgradeneeded = function(e) {
+      db = e.target.result;
+
+      if (!db.objectStoreNames.contains("users")) {
+        db.createObjectStore("users", {
+          keyPath: "email"
+        });
+      }
+
+      if (!db.objectStoreNames.contains("todos")) {
+        const todoStore = db.createObjectStore("todos", {
+          keyPath: "id",
+          autoIncrement: true
+        });
+
+        todoStore.createIndex("userEmail", "userEmail", {
+          unique: false
+        });
+      }
+    };
+
+    request.onsuccess = function(e) {
+      db = e.target.result;
+      init();
+    };
+
+    request.onerror = function() {
+      alert("Database failed to load");
+    };
+
+    // ==========================
+    // GLOBALS
+    // ==========================
+    let isLogin = true;
+    let currentUser = null;
+    let editingId = null;
+
+    // ==========================
+    // INIT
+    // ==========================
+    function init() {
+
+      const savedUser = localStorage.getItem("currentUser");
+
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        showDashboard();
+      }
+
+      bindEvents();
+    }
+
+    // ==========================
+    // EVENTS
+    // ==========================
+    function bindEvents() {
+
+      document
+        .getElementById("toggleAuth")
+        .addEventListener("click", toggleAuthMode);
+
+      document
+        .getElementById("authBtn")
+        .addEventListener("click", handleAuth);
+
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", logout);
+
+      document
+        .getElementById("addTodoBtn")
+        .addEventListener("click", addTodo);
+
+      document
+        .getElementById("uploadImageBtn")
+        .addEventListener("click", () => {
+          document.getElementById("profileInput").click();
+        });
+
+      document
+        .getElementById("profileInput")
+        .addEventListener("change", uploadProfileImage);
+    }
+
+    // ==========================
+    // AUTH TOGGLE
+    // ==========================
+    function toggleAuthMode() {
+
+      isLogin = !isLogin;
+
+      document
+        .getElementById("nameGroup")
+        .classList.toggle("hidden");
+
+      document.getElementById("authBtn").textContent =
+        isLogin ? "Login" : "Register";
+
+      document.getElementById("toggleAuth").textContent =
+        isLogin
+          ? "Create account"
+          : "Already have account?";
+    }
+
+    // ==========================
+    // REGISTER / LOGIN
+    // ==========================
+    function handleAuth() {
+
+      const email =
+        document.getElementById("email").value.trim();
+
+      const password =
+        document.getElementById("password").value.trim();
+
+      const fullName =
+        document.getElementById("fullName").value.trim();
+
+      if (!email || !password) {
+        alert("Please fill all fields");
+        return;
+      }
+
+      const tx = db.transaction("users", "readwrite");
+      const store = tx.objectStore("users");
+
+      if (!isLogin) {
+
+        if (!fullName) {
+          alert("Enter full name");
+          return;
+        }
+
+        const getReq = store.get(email);
+
+        getReq.onsuccess = () => {
+
+          if (getReq.result) {
+            alert("User already exists");
+            return;
+          }
+
+          const user = {
+            email,
+            password,
+            fullName,
+            profileImage: ""
+          };
+
+          store.add(user);
+
+          currentUser = user;
+
+          localStorage.setItem(
+            "currentUser",
+            JSON.stringify(user)
+          );
+
+          showDashboard();
+        };
+
+      } else {
+
+        const getReq = store.get(email);
+
+        getReq.onsuccess = () => {
+
+          const user = getReq.result;
+
+          if (!user) {
+            alert("User not found");
+            return;
+          }
+
+          if (user.password !== password) {
+            alert("Wrong password");
+            return;
+          }
+
+          currentUser = user;
+
+          localStorage.setItem(
+            "currentUser",
+            JSON.stringify(user)
+          );
+
+          showDashboard();
+        };
+      }
+    }
+
+    // ==========================
+    // SHOW DASHBOARD
+    // ==========================
+    function showDashboard() {
+
+      document
+        .getElementById("authWrapper")
+        .classList.add("hidden");
+
+      document
+        .getElementById("dashboard")
+        .classList.remove("hidden");
+
+      document.getElementById("profileName").textContent =
+        currentUser.fullName;
+
+      document.getElementById("profileEmail").textContent =
+        currentUser.email;
+
+      if (currentUser.profileImage) {
+        document.getElementById("avatar").src =
+          currentUser.profileImage;
+      }
+
+      loadTodos();
+    }
+
+    // ==========================
+    // LOGOUT
+    // ==========================
+    function logout() {
+
+      localStorage.removeItem("currentUser");
+      location.reload();
+    }
+
+    // ==========================
+    // PROFILE IMAGE
+    // ==========================
+    function uploadProfileImage(e) {
+
+      const file = e.target.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(event) {
+
+        const image = event.target.result;
+
+        currentUser.profileImage = image;
+
+        const tx = db.transaction("users", "readwrite");
+        const store = tx.objectStore("users");
+
+        store.put(currentUser);
+
+        localStorage.setItem(
+          "currentUser",
+          JSON.stringify(currentUser)
+        );
+
+        document.getElementById("avatar").src = image;
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    // ==========================
+    // ADD / UPDATE TODO
+    // ==========================
+    function addTodo() {
+
+      const title =
+        document.getElementById("todoTitle").value.trim();
+
+      const description =
+        document.getElementById("todoDescription").value.trim();
+
+      const date =
+        document.getElementById("todoDate").value;
+
+      const priority =
+        document.getElementById("todoPriority").value;
+
+      if (!title) {
+        alert("Enter task title");
+        return;
+      }
+
+      const tx = db.transaction("todos", "readwrite");
+      const store = tx.objectStore("todos");
+
+      if (editingId) {
+
+        const todo = {
+          id: editingId,
+          title,
+          description,
+          date,
+          priority,
+          completed: false,
+          userEmail: currentUser.email
+        };
+
+        store.put(todo);
+
+        editingId = null;
+
+        document.getElementById("addTodoBtn")
+          .textContent = "Add Task";
+
+      } else {
+
+        const todo = {
+          title,
+          description,
+          date,
+          priority,
+          completed: false,
+          userEmail: currentUser.email,
+          createdAt: new Date().toISOString()
+        };
+
+        store.add(todo);
+      }
+
+      clearForm();
+
+      setTimeout(loadTodos, 100);
+    }
+
+    // ==========================
+    // LOAD TODOS
+    // ==========================
+    function loadTodos() {
+
+      const tx = db.transaction("todos", "readonly");
+      const store = tx.objectStore("todos");
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+
+        const todos = request.result.filter(
+          t => t.userEmail === currentUser.email
+        );
+
+        renderTodos(todos);
+        updateStats(todos);
+      };
+    }
+
+    // ==========================
+    // RENDER TODOS
+    // ==========================
+    function renderTodos(todos) {
+
+      const list = document.getElementById("todoList");
+
+      if (!todos.length) {
+        list.innerHTML = `
+          <div class="glass empty">
+            No tasks yet 🚀
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = "";
+
+      todos.reverse().forEach(todo => {
+
+        const div = document.createElement("div");
+
+        div.className =
+          `todo-card glass ${
+            todo.completed ? "completed" : ""
+          }`;
+
+        div.innerHTML = `
+          <div class="priority ${todo.priority}">
+            ${todo.priority.toUpperCase()}
+          </div>
+
+          <h3>${todo.title}</h3>
+
+          <p>${todo.description || "No description"}</p>
+
+          <div class="todo-footer">
+
+            <div>
+              📅 ${todo.date || "No date"}
+            </div>
+
+            <div class="todo-buttons">
+
+              <button
+                class="complete-btn"
+                onclick="toggleComplete(${todo.id})"
+              >
+                ${todo.completed ? "Undo" : "Done"}
+              </button>
+
+              <button
+                class="edit-btn"
+                onclick="editTodo(${todo.id})"
+              >
+                Edit
+              </button>
+
+              <button
+                class="delete-btn"
+                onclick="deleteTodo(${todo.id})"
+              >
+                Delete
+              </button>
+
+            </div>
+
+          </div>
+        `;
+
+        list.appendChild(div);
+      });
+    }
+
+    // ==========================
+    // TOGGLE COMPLETE
+    // ==========================
+    function toggleComplete(id) {
+
+      const tx = db.transaction("todos", "readwrite");
+      const store = tx.objectStore("todos");
+
+      const req = store.get(id);
+
+      req.onsuccess = () => {
+
+        const todo = req.result;
+
+        todo.completed = !todo.completed;
+
+        store.put(todo);
+
+        setTimeout(loadTodos, 100);
+      };
+    }
+
+    // ==========================
+    // DELETE TODO
+    // ==========================
+    function deleteTodo(id) {
+
+      const tx = db.transaction("todos", "readwrite");
+      const store = tx.objectStore("todos");
+
+      store.delete(id);
+
+      setTimeout(loadTodos, 100);
+    }
+
+    // ==========================
+    // EDIT TODO
+    // ==========================
+    function editTodo(id) {
+
+      const tx = db.transaction("todos", "readonly");
+      const store = tx.objectStore("todos");
+
+      const req = store.get(id);
+
+      req.onsuccess = () => {
+
+        const todo = req.result;
+
+        editingId = todo.id;
+
+        document.getElementById("todoTitle").value =
+          todo.title;
+
+        document.getElementById("todoDescription").value =
+          todo.description;
+
+        document.getElementById("todoDate").value =
+          todo.date;
+
+        document.getElementById("todoPriority").value =
+          todo.priority;
+
+        document.getElementById("addTodoBtn")
+          .textContent = "Update Task";
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      };
+    }
+
+    // ==========================
+    // STATS
+    // ==========================
+    function updateStats(todos) {
+
+      const completed =
+        todos.filter(t => t.completed).length;
+
+      document.getElementById("totalTasks")
+        .textContent = todos.length;
+
+      document.getElementById("completedTasks")
+        .textContent = completed;
+
+      document.getElementById("pendingTasks")
+        .textContent =
+          todos.length - completed;
+    }
+
+    // ==========================
+    // CLEAR FORM
+    // ==========================
+    function clearForm() {
+
+      document.getElementById("todoTitle").value = "";
+      document.getElementById("todoDescription").value = "";
+      document.getElementById("todoDate").value = "";
+      document.getElementById("todoPriority").value = "low";
+    }
+
+    // ==========================
+    // PWA SERVICE WORKER
+    // ==========================
+    if ("serviceWorker" in navigator) {
+
+      const swCode = `
+        self.addEventListener('install', e => {
+          self.skipWaiting();
+        });
+
+        self.addEventListener('fetch', event => {
+          event.respondWith(
+            caches.open('todo-pwa-cache').then(cache => {
+              return cache.match(event.request)
+                .then(response => {
+                  return response || fetch(event.request)
+                    .then(networkResponse => {
+                      cache.put(
+                        event.request,
+                        networkResponse.clone()
+                      );
+                      return networkResponse;
+                    });
+                });
+            })
+          );
+        });
+      `;
+
+      const blob = new Blob([swCode], {
+        type: "application/javascript"
+      });
+
+      const swURL = URL.createObjectURL(blob);
+
+      navigator.serviceWorker
+        .register(swURL)
+        .then(() => {
+          console.log("Service Worker Registered");
+        });
+    }
+  </script>
+
+</body>
+</html>

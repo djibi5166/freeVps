@@ -1,0 +1,55 @@
+name: Docker Nginx Test
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  nginx-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Show Files
+        run: |
+          ls -la
+
+      - name: Build Docker Container
+        run: |
+          docker compose build
+
+      - name: Start Docker Container
+        run: |
+          docker compose up -d
+
+      - name: Show Running Containers
+        run: |
+          docker ps
+
+      - name: Install Cloudflare Tunnel
+        run: |
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
+
+          sudo dpkg -i cloudflared.deb
+
+      - name: Start HTTPS Tunnel
+        run: |
+          tmux new-session -d '
+            cloudflared tunnel --url http://localhost:8080 > tunnel.log 2>&1
+          '
+
+          sleep 15
+
+          cat tunnel.log
+
+      - name: Keep Workflow Alive
+        run: |
+          echo "SERVER RUNNING..."
+
+          while true; do
+            echo "alive $(date)"
+            sleep 300
+          done
