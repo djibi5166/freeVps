@@ -1,0 +1,66 @@
+name: FreeVps App Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  test-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      APP_PORT: 8080
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Show runner info
+        run: |
+          echo "Runner hostname: $(hostname)"
+          echo "Runner IP: $(hostname -I | awk '{print $1}')"
+
+      - name: Build and start app
+        run: docker compose up --build -d
+
+      - name: Wait for app to respond
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent "http://127.0.0.1:${APP_PORT}/" > /tmp/freevps.html; then
+              echo "Application is ready"
+              exit 0
+            fi
+            echo "Waiting for app on port ${APP_PORT}..."
+            sleep 2
+          done
+
+          echo "App did not start in time"
+          docker compose ps
+          docker compose logs
+          exit 1
+
+      - name: Validate HTML content
+        run: |
+          grep -q "Todo PWA" /tmp/freevps.html
+          grep -q "Advanced IndexedDB Todo App" /tmp/freevps.html
+          echo "Expected app content found"
+
+      - name: Check access via runner IP
+        run: |
+          RUNNER_IP=$(hostname -I | awk '{print $1}')
+          echo "Access URL: http://${RUNNER_IP}:${APP_PORT}"
+          curl --fail --silent "http://${RUNNER_IP}:${APP_PORT}/" | head -n 20
+
+      - name: Show container logs if failed
+        if: failure()
+        run: |
+          echo "---- docker compose logs ----"
+          docker compose logs
+
+      - name: Shutdown app
+        if: always()
+        run: docker compose down -v
