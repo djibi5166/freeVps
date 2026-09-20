@@ -16,7 +16,10 @@ jobs:
       - name: Show Files
         run: |
           ls -la
-
+      - name: Check access via runner IP
+        run: |
+          RUNNER_IP=$(hostname -I | awk '{print $1}')
+          echo "ip: ${RUNNER_IP}"
       - name: Build Docker Container
         run: |
           docker compose build
